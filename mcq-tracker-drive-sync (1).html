@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCQ Tracker — Offline</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --paper:#EEF1EC;
+  --paper-line:#D7DED6;
+  --card:#FFFFFF;
+  --ink:#1C2B3A;
+  --ink-soft:#5B6B76;
+  --ink-faint:#8B9AA3;
+  --teal:#2F7A6D;
+  --teal-soft:#E3EEEA;
+  --red:#C1453B;
+  --red-soft:#F7E7E4;
+  --amber:#B8842E;
+  --amber-soft:#F3E9D6;
+  --line:#DADFDA;
+  --radius:10px;
+  font-size:16px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  background-image: linear-gradient(var(--paper-line) 1px, transparent 1px);
+  background-size: 100% 32px;
+  color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  min-height:100vh;
+  padding:32px 16px 80px;
+}
+
+.wrap{max-width:880px;margin:0 auto;}
+
+/* clip */
+.clip-svg{display:block;margin:0 auto -14px;position:relative;z-index:2;}
+
+.board{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:0 1px 2px rgba(28,43,58,.04), 0 12px 28px -14px rgba(28,43,58,.18);
+  overflow:hidden;
+}
+
+.board-head{
+  padding:34px 32px 22px;
+  border-bottom:1px solid var(--line);
+}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  letter-spacing:.14em;
+  color:var(--ink-faint);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+h1{
+  font-family:'Fraunces',Georgia,serif;
+  font-weight:600;
+  font-size:34px;
+  margin:0 0 4px;
+  letter-spacing:-.01em;
+}
+.subtitle{
+  color:var(--ink-soft);
+  font-size:14.5px;
+  margin-bottom:22px;
+}
+
+/* daily goal strip */
+.goal-strip{
+  display:flex;align-items:center;gap:16px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:14px 16px;
+}
+.goal-strip .glabel{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; letter-spacing:.08em; color:var(--ink-soft); text-transform:uppercase;
+  white-space:nowrap;
+}
+.goal-track{
+  flex:1;height:10px;background:#DDE3DD;border-radius:6px;overflow:hidden;position:relative;
+}
+.goal-fill{
+  height:100%;background:var(--teal);border-radius:6px;transition:width .4s ease;
+}
+.goal-num{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;font-weight:600;white-space:nowrap;color:var(--ink);
+}
+.goal-edit{
+  background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 9px;cursor:pointer;
+}
+.goal-edit:hover{border-color:var(--ink-soft);color:var(--ink);}
+
+/* drive sync strip */
+.drive-strip{
+  display:flex;align-items:center;gap:10px;margin-top:10px;
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);
+}
+.drive-dot{width:8px;height:8px;border-radius:50%;background:var(--ink-faint);flex-shrink:0;}
+.drive-dot.connected{background:var(--teal);}
+.drive-dot.syncing{background:var(--amber);}
+.drive-dot.error{background:var(--red);}
+.drive-btn{
+  background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 9px;cursor:pointer;
+}
+.drive-btn:hover{border-color:var(--ink-soft);color:var(--ink);}
+.drive-status{flex:1;}
+
+/* tabs */
+.tabs{
+  display:flex;gap:2px;padding:0 32px;background:var(--paper);border-bottom:1px solid var(--line);
+}
+.tab-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+  background:none;border:none;padding:14px 4px;margin-right:26px;color:var(--ink-faint);
+  cursor:pointer;border-bottom:2px solid transparent;position:relative;top:1px;
+}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);}
+.tab-btn:hover:not(.active){color:var(--ink-soft);}
+
+.panel{padding:28px 32px 32px;display:none;}
+.panel.active{display:block;}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field.full{grid-column:1/-1;}
+label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+input,select,textarea{
+  font-family:'Inter',sans-serif;font-size:14.5px;color:var(--ink);
+  border:1px solid var(--line);border-radius:7px;padding:9px 11px;background:var(--card);
+  width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+textarea{resize:vertical;min-height:56px;font-family:'Inter',sans-serif;}
+
+.type-toggle{display:flex;gap:8px;grid-column:1/-1;margin-bottom:2px;}
+.type-btn{
+  flex:1;padding:10px;border:1px solid var(--line);border-radius:7px;background:var(--card);
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-soft);cursor:pointer;
+}
+.type-btn.active{border-color:var(--ink);color:var(--ink);background:var(--paper);font-weight:600;}
+
+.live-acc{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  background:var(--paper);border:1px dashed var(--line);border-radius:7px;padding:10px 14px;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);
+}
+.live-acc b{color:var(--ink);font-size:15px;}
+
+.submit-btn{
+  grid-column:1/-1;margin-top:6px;
+  background:var(--ink);color:#fff;border:none;border-radius:7px;padding:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;font-weight:600;
+}
+.submit-btn:hover{background:#0f1c28;}
+
+/* history */
+.hist-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.hist-filters select{width:auto;font-size:13px;padding:7px 10px;}
+
+.hist-row{
+  display:grid;grid-template-columns:34px 1fr auto auto 26px;align-items:center;gap:12px;
+  padding:13px 4px;border-bottom:1px solid var(--paper-line);
+}
+.hist-row:last-child{border-bottom:none;}
+.bubble{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--ink-faint);
+}
+.bubble.good{border-color:var(--teal);color:var(--teal);}
+.bubble.mid{border-color:var(--amber);color:var(--amber);}
+.bubble.bad{border-color:var(--red);color:var(--red);}
+.hist-main .h-top{font-size:14px;font-weight:600;}
+.hist-main .h-sub{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.hist-note{font-size:12.5px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+.h-score{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;text-align:right;white-space:nowrap;}
+.h-date{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);white-space:nowrap;}
+.h-del{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:16px;line-height:1;}
+.h-del:hover{color:var(--red);}
+.empty{
+  text-align:center;padding:40px 10px;color:var(--ink-faint);font-size:14px;
+}
+.empty .big{font-family:'Fraunces',serif;font-size:20px;color:var(--ink-soft);margin-bottom:6px;}
+
+/* analytics */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.stat-card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:13px 14px;}
+.stat-card .s-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;}
+.stat-card .s-val{font-family:'Fraunces',serif;font-size:23px;font-weight:600;}
+.stat-card .s-sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+.ecg-box{
+  border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:26px;
+  background:#F8FAF7;
+}
+.ecg-head{
+  display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);
+}
+.ecg-title{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+.ecg-live{display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.4);}}
+@media (prefers-reduced-motion: reduce){.pulse-dot{animation:none;}}
+
+.section-title{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 12px;
+}
+.subj-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.subj-name{width:150px;font-size:12.5px;color:var(--ink);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.subj-track{flex:1;height:9px;background:#E3E8E2;border-radius:5px;overflow:hidden;}
+.subj-fill{height:100%;border-radius:5px;}
+.subj-pct{width:64px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;flex-shrink:0;}
+.tag-review{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;background:var(--red-soft);color:var(--red);
+  padding:2px 6px;border-radius:4px;margin-left:6px;letter-spacing:.03em;
+}
+
+.gt-table{width:100%;border-collapse:collapse;margin-top:4px;}
+.gt-table th{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-faint);text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);
+}
+.gt-table td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--paper-line);}
+.gt-table td.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* footer actions */
+.foot-actions{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;
+}
+.ghost-btn{
+  background:none;border:1px solid var(--line);color:var(--ink-soft);
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;
+  padding:9px 14px;border-radius:7px;cursor:pointer;
+}
+.ghost-btn:hover{border-color:var(--ink-soft);color:var(--ink);}
+.foot-note{
+  text-align:center;color:var(--ink-faint);font-size:11.5px;margin-top:14px;font-family:'IBM Plex Mono',monospace;
+}
+#file-import{display:none;}
+
+@media (max-width:640px){
+  .form-grid{grid-template-columns:1fr;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .board-head,.panel{padding-left:18px;padding-right:18px;}
+  .tabs{padding-left:18px;}
+  .subj-name{width:96px;}
+}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div class="wrap">
+
+  <svg class="clip-svg" width="70" height="26" viewBox="0 0 70 26" fill="none">
+    <path d="M8 4h54a4 4 0 0 1 4 4v0a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v0a4 4 0 0 1 4-4Z" fill="#1C2B3A"/>
+    <rect x="20" y="10" width="30" height="14" rx="3" fill="#EEF1EC" stroke="#1C2B3A" stroke-width="1.5"/>
+  </svg>
+
+  <div class="board">
+    <div class="board-head">
+      <div class="eyebrow">Daily MCQ Log · NEET-PG / INICET</div>
+      <h1>MCQ Tracker</h1>
+      <div class="subtitle">Every session logged offline, on this device only.</div>
+
+      <div class="goal-strip">
+        <span class="glabel">Today</span>
+        <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+        <span class="goal-num" id="goalNum">0 / 100</span>
+        <button class="goal-edit" id="goalEditBtn">edit goal</button>
+      </div>
+
+      <div class="drive-strip">
+        <span class="drive-dot" id="driveDot"></span>
+        <span class="drive-status" id="driveStatus">Not connected to Google Drive</span>
+        <button class="drive-btn" id="driveConnectBtn">Connect Google Drive</button>
+        <button class="drive-btn" id="driveSyncBtn" style="display:none;">Sync now</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="log">Log Session</button>
+      <button class="tab-btn" data-tab="history">History</button>
+      <button class="tab-btn" data-tab="analytics">Analytics</button>
+    </div>
+
+    <!-- LOG -->
+    <div class="panel active" id="panel-log">
+      <div class="form-grid" id="logForm">
+        <div class="type-toggle">
+          <button type="button" class="type-btn active" data-type="practice">MCQ Practice</button>
+          <button type="button" class="type-btn" data-type="grand">Grand Test</button>
+        </div>
+
+        <div class="field" id="fSubjectWrap">
+          <label>Subject</label>
+          <select id="fSubject">
+            <option>Anatomy</option><option>Physiology</option><option>Biochemistry</option>
+            <option>Pathology</option><option>Pharmacology</option><option>Microbiology</option>
+            <option>Forensic Medicine</option><option>Medicine</option><option>Surgery</option>
+            <option>Obstetrics & Gynaecology</option><option>Paediatrics</option>
+            <option>Community Medicine</option><option>ENT</option><option>Ophthalmology</option>
+            <option>Orthopaedics</option><option>Psychiatry</option><option>Radiology</option>
+            <option>Anaesthesia</option><option>Dermatology</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="fDate">
+        </div>
+
+        <div class="field" id="fCorrectWrap">
+          <label id="fCorrectLbl">Correct</label>
+          <input type="number" id="fCorrect" min="0" placeholder="0">
+        </div>
+        <div class="field" id="fTotalWrap">
+          <label id="fTotalLbl">Total Attempted</label>
+          <input type="number" id="fTotal" min="0" placeholder="0">
+        </div>
+
+        <div class="field" id="fPercentileWrap" style="display:none">
+          <label>Percentile</label>
+          <input type="number" id="fPercentile" min="0" max="100" step="0.01" placeholder="e.g. 92.4">
+        </div>
+        <div class="field" id="fAirWrap" style="display:none">
+          <label>AIR (All India Rank)</label>
+          <input type="number" id="fAir" min="1" placeholder="e.g. 4210">
+        </div>
+
+        <div class="live-acc" id="liveAcc">Accuracy will appear here — <b>—</b></div>
+
+        <div class="field full">
+          <label>Notes (optional)</label>
+          <textarea id="fNotes" placeholder="e.g. Weak on renal physiology, revisit Guyton ch.26"></textarea>
+        </div>
+
+        <button type="button" class="submit-btn" id="submitBtn">Log Session</button>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="panel" id="panel-history">
+      <div class="hist-filters">
+        <select id="histTypeFilter">
+          <option value="all">All types</option>
+          <option value="practice">MCQ Practice</option>
+          <option value="grand">Grand Tests</option>
+        </select>
+        <select id="histSubjFilter">
+          <option value="all">All subjects</option>
+        </select>
+      </div>
+      <div id="histList"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="panel" id="panel-analytics">
+      <div class="stat-row" id="statRow"></div>
+
+      <div class="ecg-box">
+        <div class="ecg-head">
+          <span class="ecg-title">Accuracy Monitor · Practice Sessions</span>
+          <div class="ecg-live"><span class="pulse-dot" id="pulseDot"></span><span id="ecgLiveVal">— %</span></div>
+        </div>
+        <div id="ecgChart"></div>
+      </div>
+
+      <div class="section-title">Subject-wise accuracy (below 65% flagged for review)</div>
+      <div id="subjBars" style="margin-bottom:26px;"></div>
+
+      <div class="section-title">Grand Tests</div>
+      <div id="gtTableWrap"></div>
+    </div>
+
+    <div style="padding:0 32px 30px;">
+      <div class="foot-actions">
+        <button class="ghost-btn" id="demoBtn">Load demo data</button>
+        <button class="ghost-btn" id="exportBtn">Export backup (.json)</button>
+        <button class="ghost-btn" id="importBtn">Import backup</button>
+        <button class="ghost-btn" id="resetBtn">Clear all data</button>
+      </div>
+      <input type="file" id="file-import" accept="application/json">
+      <div class="foot-note">Stored in this browser's local storage · connect Google Drive above to back up &amp; sync</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "mcqTrackerData_v1";
+  var SUBJECTS = ["Anatomy","Physiology","Biochemistry","Pathology","Pharmacology","Microbiology",
+    "Forensic Medicine","Medicine","Surgery","Obstetrics & Gynaecology","Paediatrics",
+    "Community Medicine","ENT","Ophthalmology","Orthopaedics","Psychiatry","Radiology",
+    "Anaesthesia","Dermatology"];
+
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return { goal: 100, sessions: [] };
+      var parsed = JSON.parse(raw);
+      if(!parsed.sessions) parsed.sessions = [];
+      if(!parsed.goal) parsed.goal = 100;
+      return parsed;
+    }catch(e){ return { goal: 100, sessions: [] }; }
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ console.error("Could not save:", e); }
+    Drive.queuePush();
+  }
+
+  var state = loadState();
+  var currentType = "practice";
+
+  // ================= Google Drive sync =================
+  // 1. Create an OAuth Client ID at https://console.cloud.google.com/apis/credentials
+  //    (Application type: Web application; Authorized JavaScript origin: your localhost URL)
+  // 2. Enable the "Google Drive API" for that project.
+  // 3. Paste the Client ID below.
+  var DRIVE_CLIENT_ID = "565169415428-r2ee94hemku3t5cgb1t96ugrkg8jvjdr.apps.googleusercontent.com";
+  var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  var DRIVE_FILENAME = "mcq-tracker-data.json";
+
+  var Drive = (function(){
+    var tokenClient = null;
+    var accessToken = null;
+    var fileId = null;
+    var pushTimer = null;
+    var ready = false;
+
+    var dotEl, statusEl, connectBtn, syncBtn;
+
+    function setStatus(text, dotClass){
+      if(!statusEl) return;
+      statusEl.textContent = text;
+      dotEl.className = "drive-dot" + (dotClass ? " " + dotClass : "");
+    }
+
+    function init(){
+      dotEl = document.getElementById("driveDot");
+      statusEl = document.getElementById("driveStatus");
+      connectBtn = document.getElementById("driveConnectBtn");
+      syncBtn = document.getElementById("driveSyncBtn");
+
+      if(DRIVE_CLIENT_ID.indexOf("PASTE_YOUR_CLIENT_ID_HERE") !== -1){
+        setStatus("Drive sync not configured yet — add your Client ID in the HTML file", "error");
+        connectBtn.disabled = true;
+        connectBtn.style.opacity = "0.5";
+        return;
+      }
+
+      connectBtn.addEventListener("click", connect);
+      syncBtn.addEventListener("click", function(){ pushNow(); pullAndMerge(false); });
+
+      // google.accounts may not have loaded yet if script is slow
+      var waitForGis = setInterval(function(){
+        if(window.google && google.accounts && google.accounts.oauth2){
+          clearInterval(waitForGis);
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: DRIVE_CLIENT_ID,
+            scope: DRIVE_SCOPE,
+            callback: onToken
+          });
+          ready = true;
+        }
+      }, 200);
+    }
+
+    function connect(){
+      if(!ready){ setStatus("Still loading Google's sign-in library — try again in a second", "error"); return; }
+      setStatus("Connecting…", "syncing");
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    }
+
+    function onToken(resp){
+      if(resp.error){
+        setStatus("Connection failed: " + resp.error, "error");
+        return;
+      }
+      accessToken = resp.access_token;
+      connectBtn.textContent = "Reconnect";
+      syncBtn.style.display = "inline-block";
+      setStatus("Connected — looking for your data on Drive…", "syncing");
+      findOrCreateFile();
+    }
+
+    function authHeader(){
+      return { "Authorization": "Bearer " + accessToken };
+    }
+
+    function findOrCreateFile(){
+      var q = encodeURIComponent("name='" + DRIVE_FILENAME + "' and trashed=false");
+      fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=" + q + "&fields=files(id,name,modifiedTime)",
+        { headers: authHeader() })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if(data.files && data.files.length > 0){
+            fileId = data.files[0].id;
+            pullAndMerge(true);
+          } else {
+            createFile();
+          }
+        })
+        .catch(function(err){ setStatus("Drive error: " + err.message, "error"); });
+    }
+
+    function createFile(){
+      var metadata = { name: DRIVE_FILENAME, parents: ["appDataFolder"] };
+      var boundary = "mcqtracker" + Date.now();
+      var body =
+        "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+        JSON.stringify(metadata) + "\r\n" +
+        "--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" +
+        JSON.stringify(state) + "\r\n" +
+        "--" + boundary + "--";
+
+      fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
+        method: "POST",
+        headers: Object.assign(authHeader(), { "Content-Type": "multipart/related; boundary=" + boundary }),
+        body: body
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          fileId = data.id;
+          setStatus("Connected — backup created on Drive", "connected");
+        })
+        .catch(function(err){ setStatus("Drive error: " + err.message, "error"); });
+    }
+
+    function pullAndMerge(offerMerge){
+      fetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", { headers: authHeader() })
+        .then(function(r){ return r.json(); })
+        .then(function(remote){
+          if(!remote || !remote.sessions){
+            setStatus("Connected — Drive backup was empty, pushing local data", "syncing");
+            pushNow();
+            return;
+          }
+          var localCount = state.sessions.length;
+          var remoteCount = remote.sessions.length;
+          if(offerMerge && localCount > 0 && JSON.stringify(state) !== JSON.stringify(remote)){
+            var useRemote = confirm(
+              "Found existing data on Google Drive (" + remoteCount + " sessions) and on this device (" +
+              localCount + " sessions).\n\nOK = load Drive's version (replaces local)\nCancel = keep local and overwrite Drive with it"
+            );
+            if(useRemote){
+              state = remote;
+              saveLocalOnly();
+              refreshAllViews();
+              setStatus("Connected — loaded data from Drive", "connected");
+            } else {
+              pushNow();
+            }
+          } else if(localCount === 0 && remoteCount > 0){
+            state = remote;
+            saveLocalOnly();
+            refreshAllViews();
+            setStatus("Connected — loaded " + remoteCount + " sessions from Drive", "connected");
+          } else {
+            setStatus("Connected — synced (" + localCount + " sessions)", "connected");
+          }
+        })
+        .catch(function(err){ setStatus("Drive error: " + err.message, "error"); });
+    }
+
+    function saveLocalOnly(){
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+    }
+
+    function refreshAllViews(){
+      renderGoalStrip(); renderHistory(); renderAnalytics();
+    }
+
+    function queuePush(){
+      if(!accessToken || !fileId) return;
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(pushNow, 1500);
+    }
+
+    function pushNow(){
+      if(!accessToken || !fileId) return;
+      setStatus("Syncing…", "syncing");
+      fetch("https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media", {
+        method: "PATCH",
+        headers: Object.assign(authHeader(), { "Content-Type": "application/json" }),
+        body: JSON.stringify(state)
+      })
+        .then(function(r){
+          if(!r.ok) throw new Error("HTTP " + r.status);
+          setStatus("Connected — synced (" + state.sessions.length + " sessions)", "connected");
+        })
+        .catch(function(err){ setStatus("Sync failed: " + err.message, "error"); });
+    }
+
+    return { init: init, queuePush: queuePush };
+  })();
+
+  Drive.init();
+
+  // ---------- tabs ----------
+  document.querySelectorAll(".tab-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      if(btn.dataset.tab === "history") renderHistory();
+      if(btn.dataset.tab === "analytics") renderAnalytics();
+    });
+  });
+
+  // ---------- log form ----------
+  document.getElementById("fDate").value = todayStr();
+
+  document.querySelectorAll(".type-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".type-btn").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      currentType = btn.dataset.type;
+      var isGrand = currentType === "grand";
+      document.getElementById("fPercentileWrap").style.display = isGrand ? "flex" : "none";
+      document.getElementById("fAirWrap").style.display = isGrand ? "flex" : "none";
+      document.getElementById("fSubjectWrap").style.display = isGrand ? "none" : "flex";
+      document.getElementById("fCorrectLbl").textContent = isGrand ? "Score (marks)" : "Correct";
+      document.getElementById("fTotalLbl").textContent = isGrand ? "Out Of (e.g. 800)" : "Total Attempted";
+      if(isGrand) document.getElementById("fTotal").value = document.getElementById("fTotal").value || 800;
+      updateLiveAcc();
+    });
+  });
+
+  ["fCorrect","fTotal"].forEach(function(id){
+    document.getElementById(id).addEventListener("input", updateLiveAcc);
+  });
+
+  function updateLiveAcc(){
+    var c = parseFloat(document.getElementById("fCorrect").value);
+    var t = parseFloat(document.getElementById("fTotal").value);
+    var el = document.getElementById("liveAcc");
+    if(!isNaN(c) && !isNaN(t) && t > 0){
+      var pct = (c/t*100).toFixed(1);
+      var label = currentType === "grand" ? "Score" : "Accuracy will appear here";
+      el.innerHTML = (currentType === "grand" ? "Score — " : "Accuracy — ") + "<b>" + pct + "%</b>";
+    } else {
+      el.innerHTML = "Accuracy will appear here — <b>—</b>";
+    }
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", function(){
+    var date = document.getElementById("fDate").value || todayStr();
+    var correct = parseFloat(document.getElementById("fCorrect").value);
+    var total = parseFloat(document.getElementById("fTotal").value);
+    var notes = document.getElementById("fNotes").value.trim();
+
+    if(isNaN(correct) || isNaN(total) || total <= 0 || correct < 0 || correct > total){
+      alert("Enter valid numbers — correct/score cannot exceed the total.");
+      return;
+    }
+
+    var entry = {
+      id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      type: currentType,
+      date: date,
+      correct: correct,
+      total: total,
+      notes: notes
+    };
+    if(currentType === "practice"){
+      entry.subject = document.getElementById("fSubject").value;
+    } else {
+      var pct = document.getElementById("fPercentile").value;
+      var air = document.getElementById("fAir").value;
+      entry.percentile = pct ? parseFloat(pct) : null;
+      entry.air = air ? parseInt(air,10) : null;
+    }
+
+    state.sessions.push(entry);
+    saveState();
+
+    document.getElementById("fCorrect").value = "";
+    document.getElementById("fTotal").value = currentType === "grand" ? 800 : "";
+    document.getElementById("fNotes").value = "";
+    document.getElementById("fPercentile").value = "";
+    document.getElementById("fAir").value = "";
+    updateLiveAcc();
+    renderGoalStrip();
+
+    var btn = document.getElementById("submitBtn");
+    var orig = btn.textContent;
+    btn.textContent = "Logged ✓";
+    setTimeout(function(){ btn.textContent = orig; }, 1100);
+  });
+
+  // ---------- goal strip ----------
+  document.getElementById("goalEditBtn").addEventListener("click", function(){
+    var val = prompt("Set your daily MCQ goal:", state.goal);
+    if(val === null) return;
+    var n = parseInt(val,10);
+    if(!isNaN(n) && n > 0){ state.goal = n; saveState(); renderGoalStrip(); }
+  });
+
+  function renderGoalStrip(){
+    var today = todayStr();
+    var doneToday = state.sessions
+      .filter(function(s){ return s.type === "practice" && s.date === today; })
+      .reduce(function(sum,s){ return sum + s.total; }, 0);
+    var pct = Math.min(100, Math.round(doneToday / state.goal * 100));
+    document.getElementById("goalFill").style.width = pct + "%";
+    document.getElementById("goalFill").style.background = pct >= 100 ? "var(--teal)" : (pct >= 50 ? "var(--teal)" : "var(--amber)");
+    document.getElementById("goalNum").textContent = doneToday + " / " + state.goal;
+  }
+
+  // ---------- history ----------
+  function populateSubjFilter(){
+    var sel = document.getElementById("histSubjFilter");
+    sel.innerHTML = '<option value="all">All subjects</option>' +
+      SUBJECTS.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join("");
+  }
+  populateSubjFilter();
+  document.getElementById("histTypeFilter").addEventListener("change", renderHistory);
+  document.getElementById("histSubjFilter").addEventListener("change", renderHistory);
+
+  function bubbleClass(pct){
+    if(pct >= 75) return "good";
+    if(pct >= 65) return "mid";
+    return "bad";
+  }
+
+  function renderHistory(){
+    var typeF = document.getElementById("histTypeFilter").value;
+    var subjF = document.getElementById("histSubjFilter").value;
+    var list = state.sessions.slice().sort(function(a,b){ return b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1); });
+
+    list = list.filter(function(s){
+      if(typeF !== "all" && s.type !== typeF) return false;
+      if(subjF !== "all" && s.subject !== subjF) return false;
+      return true;
+    });
+
+    var wrap = document.getElementById("histList");
+    if(list.length === 0){
+      wrap.innerHTML = '<div class="empty"><div class="big">No sessions yet</div>Log your first MCQ session, or load demo data to preview.</div>';
+      return;
+    }
+
+    wrap.innerHTML = list.map(function(s){
+      var pct = (s.correct / s.total * 100);
+      var pctStr = pct.toFixed(1) + "%";
+      var bc = bubbleClass(pct);
+      var top, sub, score;
+      if(s.type === "practice"){
+        top = s.subject;
+        sub = s.correct + " / " + s.total + " correct";
+        score = pctStr;
+      } else {
+        top = "Grand Test";
+        sub = (s.percentile != null ? "Percentile " + s.percentile : "") +
+              (s.air != null ? (s.percentile != null ? " · " : "") + "AIR " + s.air : "");
+        if(!sub) sub = pctStr + " accuracy";
+        score = s.correct + "/" + s.total;
+      }
+      var noteHtml = s.notes ? '<div class="hist-note">"' + escapeHtml(s.notes) + '"</div>' : "";
+      return '<div class="hist-row">' +
+        '<div class="bubble ' + bc + '">' + Math.round(pct) + '</div>' +
+        '<div class="hist-main"><div class="h-top">' + top + '</div><div class="h-sub">' + sub + '</div>' + noteHtml + '</div>' +
+        '<div class="h-score">' + score + '</div>' +
+        '<div class="h-date">' + s.date + '</div>' +
+        '<button class="h-del" data-id="' + s.id + '" title="Delete">×</button>' +
+        '</div>';
+    }).join("");
+
+    wrap.querySelectorAll(".h-del").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(confirm("Delete this session?")){
+          state.sessions = state.sessions.filter(function(s){ return s.id !== btn.dataset.id; });
+          saveState();
+          renderHistory();
+          renderGoalStrip();
+        }
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    var d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ---------- analytics ----------
+  function renderAnalytics(){
+    var practice = state.sessions.filter(function(s){ return s.type === "practice"; })
+      .sort(function(a,b){ return a.date.localeCompare(b.date) || (a.id > b.id ? 1 : -1); });
+    var grand = state.sessions.filter(function(s){ return s.type === "grand"; })
+      .sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+    renderStats(practice);
+    renderEcg(practice);
+    renderSubjectBars(practice);
+    renderGrandTable(grand);
+  }
+
+  function renderStats(practice){
+    var totalQ = practice.reduce(function(s,p){ return s+p.total; }, 0);
+    var totalC = practice.reduce(function(s,p){ return s+p.correct; }, 0);
+    var overallAcc = totalQ ? (totalC/totalQ*100).toFixed(1) : "—";
+
+    var bySubj = {};
+    practice.forEach(function(p){
+      if(!bySubj[p.subject]) bySubj[p.subject] = {c:0,t:0};
+      bySubj[p.subject].c += p.correct; bySubj[p.subject].t += p.total;
+    });
+    var best = null, worst = null;
+    Object.keys(bySubj).forEach(function(name){
+      var acc = bySubj[name].c/bySubj[name].t*100;
+      if(!best || acc > best.acc) best = {name:name, acc:acc};
+      if(!worst || acc < worst.acc) worst = {name:name, acc:acc};
+    });
+
+    // streak: consecutive days up to today with a practice session
+    var dates = {};
+    practice.forEach(function(p){ dates[p.date] = true; });
+    var streak = 0;
+    var cursor = new Date();
+    while(true){
+      var ds = cursor.toISOString().slice(0,10);
+      if(dates[ds]){ streak++; cursor.setDate(cursor.getDate()-1); }
+      else break;
+    }
+
+    var cards = [
+      { label:"Total MCQs Attempted", val: totalQ || "0", sub: practice.length + " sessions logged" },
+      { label:"Overall Accuracy", val: overallAcc + (overallAcc !== "—" ? "%" : ""), sub: totalQ ? (totalC + " correct") : "—" },
+      { label:"Current Streak", val: streak + " day" + (streak===1?"":"s"), sub: streak ? "keep it going" : "log today to start" },
+      { label:"Strongest / Weakest", val: best ? best.name.split(" ")[0] : "—", sub: worst ? "Weak: " + worst.name : "—" }
+    ];
+    document.getElementById("statRow").innerHTML = cards.map(function(c){
+      return '<div class="stat-card"><div class="s-label">'+c.label+'</div><div class="s-val">'+c.val+'</div><div class="s-sub">'+c.sub+'</div></div>';
+    }).join("");
+  }
+
+  function accColor(pct){
+    if(pct >= 75) return "var(--teal)";
+    if(pct >= 65) return "var(--amber)";
+    return "var(--red)";
+  }
+
+  function renderEcg(practice){
+    var host = document.getElementById("ecgChart");
+    var W = host.clientWidth || 780, H = 180;
+    var pad = { l: 16, r: 16, t: 20, b: 20 };
+
+    if(practice.length === 0){
+      host.innerHTML = '<div class="empty" style="padding:50px 10px;">No practice sessions yet — this monitor will trace your accuracy once you log some.</div>';
+      document.getElementById("ecgLiveVal").textContent = "— %";
+      return;
+    }
+
+    var pts = practice.map(function(p){ return (p.correct/p.total*100); });
+    var n = pts.length;
+    var innerW = W - pad.l - pad.r;
+    var innerH = H - pad.t - pad.b;
+
+    function x(i){ return pad.l + (n === 1 ? innerW/2 : innerW * i/(n-1)); }
+    function y(v){ return pad.t + innerH * (1 - v/100); }
+
+    var linePath = pts.map(function(v,i){ return (i===0?"M":"L") + x(i).toFixed(1) + "," + y(v).toFixed(1); }).join(" ");
+
+    var spikes = pts.map(function(v,i){
+      var cx = x(i), cy = y(v);
+      var spikeH = 9;
+      return '<path d="M '+(cx-6).toFixed(1)+','+cy.toFixed(1)+' L '+(cx-2).toFixed(1)+','+(cy-spikeH).toFixed(1)+' L '+cx.toFixed(1)+','+(cy+spikeH*0.5).toFixed(1)+' L '+(cx+2).toFixed(1)+','+cy.toFixed(1)+' L '+(cx+6).toFixed(1)+','+cy.toFixed(1)+'" stroke="'+accColor(v)+'" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>';
+    }).join("");
+
+    var gridLines = "";
+    for(var gy=0; gy<=H; gy+=10){
+      gridLines += '<line x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'" stroke="'+(gy%40===0?"#DCE6DC":"#EAF0E9")+'" stroke-width="1"/>';
+    }
+    var refLine65 = '<line x1="'+pad.l+'" y1="'+y(65).toFixed(1)+'" x2="'+(W-pad.r)+'" y2="'+y(65).toFixed(1)+'" stroke="var(--red)" stroke-dasharray="3,4" stroke-width="1" opacity="0.5"/>';
+    var lastX = x(n-1), lastY = y(pts[n-1]);
+
+    var svg = '<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="display:block;">' +
+      '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#F8FAF7"/>' +
+      gridLines + refLine65 +
+      '<path d="'+linePath+'" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity="0.55"/>' +
+      spikes +
+      '<circle cx="'+lastX.toFixed(1)+'" cy="'+lastY.toFixed(1)+'" r="4" fill="'+accColor(pts[n-1])+'"/>' +
+      '</svg>';
+    host.innerHTML = svg;
+
+    document.getElementById("ecgLiveVal").textContent = pts[n-1].toFixed(1) + "%";
+    document.getElementById("pulseDot").style.background = accColor(pts[n-1]);
+  }
+
+  function renderSubjectBars(practice){
+    var bySubj = {};
+    practice.forEach(function(p){
+      if(!bySubj[p.subject]) bySubj[p.subject] = {c:0,t:0};
+      bySubj[p.subject].c += p.correct; bySubj[p.subject].t += p.total;
+    });
+    var rows = Object.keys(bySubj).map(function(name){
+      var acc = bySubj[name].c/bySubj[name].t*100;
+      return { name:name, acc:acc };
+    }).sort(function(a,b){ return a.acc - b.acc; });
+
+    var host = document.getElementById("subjBars");
+    if(rows.length === 0){
+      host.innerHTML = '<div class="empty">No subject data yet.</div>';
+      return;
+    }
+    host.innerHTML = rows.map(function(r){
+      var color = accColor(r.acc);
+      var flag = r.acc < 65 ? '<span class="tag-review">review</span>' : "";
+      return '<div class="subj-bar-row">' +
+        '<div class="subj-name">'+r.name+'</div>' +
+        '<div class="subj-track"><div class="subj-fill" style="width:'+r.acc.toFixed(1)+'%;background:'+color+'"></div></div>' +
+        '<div class="subj-pct">'+r.acc.toFixed(1)+'%'+flag+'</div>' +
+        '</div>';
+    }).join("");
+  }
+
+  function renderGrandTable(grand){
+    var host = document.getElementById("gtTableWrap");
+    if(grand.length === 0){
+      host.innerHTML = '<div class="empty">No grand tests logged yet.</div>';
+      return;
+    }
+    var rowsHtml = grand.map(function(g){
+      return '<tr><td class="mono">'+g.date+'</td>' +
+        '<td class="mono">'+g.correct+' / '+g.total+'</td>' +
+        '<td class="mono">'+(g.percentile != null ? g.percentile+'%' : '—')+'</td>' +
+        '<td class="mono">'+(g.air != null ? g.air : '—')+'</td></tr>';
+    }).join("");
+    host.innerHTML = '<table class="gt-table"><thead><tr><th>Date</th><th>Score</th><th>Percentile</th><th>AIR</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>';
+  }
+
+  // ---------- demo data ----------
+  document.getElementById("demoBtn").addEventListener("click", function(){
+    if(state.sessions.length > 0 && !confirm("This adds sample sessions on top of your existing data. Continue?")) return;
+    var demoSubjects = ["Anatomy","Pathology","Pharmacology","Medicine","Surgery","Physiology","Biochemistry","Microbiology"];
+    var base = new Date();
+    var newSessions = [];
+    for(var i = 20; i >= 1; i--){
+      var d = new Date(base); d.setDate(d.getDate() - i);
+      var subj = demoSubjects[Math.floor(Math.random()*demoSubjects.length)];
+      var total = 20 + Math.floor(Math.random()*30);
+      var accBase = subj === "Pharmacology" ? 0.58 : (subj === "Anatomy" ? 0.62 : 0.72 + Math.random()*0.15);
+      var correct = Math.round(total * Math.min(0.97, accBase + (Math.random()*0.16 - 0.08)));
+      newSessions.push({
+        id: Date.now()+"_"+i+"_"+Math.random().toString(36).slice(2,6),
+        type:"practice", date: d.toISOString().slice(0,10),
+        subject: subj, correct: correct, total: total,
+        notes: correct/total < 0.65 ? "Revisit high-yield topics before next attempt" : ""
+      });
+    }
+    [12,5].forEach(function(daysAgo,idx){
+      var d = new Date(base); d.setDate(d.getDate() - daysAgo);
+      var score = 520 + idx*40 + Math.floor(Math.random()*60);
+      newSessions.push({
+        id: Date.now()+"_gt_"+idx+"_"+Math.random().toString(36).slice(2,6),
+        type:"grand", date: d.toISOString().slice(0,10),
+        correct: score, total: 800,
+        percentile: (78 + idx*6 + Math.random()*4).toFixed(2),
+        air: 6200 - idx*1400 - Math.floor(Math.random()*300),
+        notes: ""
+      });
+    });
+    state.sessions = state.sessions.concat(newSessions);
+    saveState();
+    renderGoalStrip(); renderHistory(); renderAnalytics();
+    alert("Demo data loaded — check History and Analytics.");
+  });
+
+  // ---------- export / import ----------
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "mcq-tracker-backup-" + todayStr() + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("importBtn").addEventListener("click", function(){
+    document.getElementById("file-import").click();
+  });
+  document.getElementById("file-import").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        if(!parsed.sessions) throw new Error("bad format");
+        if(confirm("Import will replace your current data. Continue?")){
+          state = { goal: parsed.goal || 100, sessions: parsed.sessions };
+          saveState();
+          renderGoalStrip(); renderHistory(); renderAnalytics();
+          alert("Backup imported successfully.");
+        }
+      }catch(err){
+        alert("Could not read that file — make sure it's a valid MCQ Tracker backup.");
+      }
+      document.getElementById("file-import").value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(confirm("This permanently deletes all logged sessions on this device. Continue?")){
+      state = { goal: 100, sessions: [] };
+      saveState();
+      renderGoalStrip(); renderHistory(); renderAnalytics();
+    }
+  });
+
+  // ---------- init ----------
+  renderGoalStrip();
+  renderHistory();
+  window.addEventListener("resize", function(){
+    if(document.getElementById("panel-analytics").classList.contains("active")) renderAnalytics();
+  });
+})();
+</script>
+</body>
+</html>
